@@ -1,28 +1,26 @@
 from OnlineScheduling.greedy_algorithm import GreedyAlgorithm
 from OnlineScheduling.job import Job
+from OnlineScheduling.optimal_solver import OptimalSolver
 from OnlineScheduling.solution import Solution
 
 if __name__ == '__main__':
-    jobs = [(0, 5, 1),
+    jobs = [
             (0, 5, 1),
             (0, 5, 1),
-            (0, 5, 1),
-            (0, 5, 1),
-            (0, 5, 1),
-            (0, 5, 1),
-            (0, 5, 1),
-            (0, 5, 1),
-            (0, 5, 1),
-            (0, 5, 1),
-            (4, 5, 1),
-            (4, 5, 1),
-            (4, 5, 1),
             (4, 5, 1),
             (4, 5, 1),
             (4, 5, 0),
             (4, 5, 0),
             (4, 5, 0),
             (4, 5, 0),
+            (4, 5, 0),
+            (4, 5, 0),
+            (4, 5, 0),
+            (4, 5, 0),
+            (4, 5, 0),
+            (4, 5, 0),
+            (5, 5, 0),
+            (5, 5, 0),
             ]
 
     input_jobs = [Job(i, a[0], a[1], a[2]) for i, a in enumerate(jobs)]

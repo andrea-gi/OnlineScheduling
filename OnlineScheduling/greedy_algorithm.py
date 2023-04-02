@@ -20,9 +20,13 @@ class GreedyAlgorithm(Simulator):
                 finished_job = heappop(self.running)[1]
                 self.jobs_running_per_class[finished_job.fare_class] -= 1
 
-            current_npl_load = sum(self.jobs_running_per_class[job.fare_class:])
-            current_total_load = sum(self.jobs_running_per_class)
-            if current_total_load < self.capacity and current_npl_load < self.npl[job.fare_class]:
+            current_load = sum(self.jobs_running_per_class)
+            satisfies_npl = True
+            for idx, partial in enumerate(self.jobs_running_per_class[:job.fare_class+1]):
+                satisfies_npl = satisfies_npl and current_load < self.npl[idx]
+                current_load -= partial
+
+            if satisfies_npl:
                 solution.add_job(job)
                 heappush(self.running, (job.arrival + job.duration, job))
                 self.jobs_running_per_class[job.fare_class] += 1
