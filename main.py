@@ -1,16 +1,32 @@
-# This is a sample Python script.
+from OnlineScheduling.greedy_algorithm import GreedyAlgorithm
+from OnlineScheduling.job import Job
+from OnlineScheduling.solution import Solution
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    jobs = [(0, 5, 1),
+            (0, 5, 1),
+            (0, 5, 1),
+            (0, 5, 1),
+            (0, 5, 1),
+            (0, 5, 1),
+            (0, 5, 1),
+            (0, 5, 1),
+            (0, 5, 1),
+            (0, 5, 1),
+            (0, 5, 1),
+            (4, 5, 1),
+            (4, 5, 1),
+            (4, 5, 1),
+            (4, 5, 1),
+            (4, 5, 1),
+            (4, 5, 0),
+            (4, 5, 0),
+            (4, 5, 0),
+            (4, 5, 0),
+            ]
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    input_jobs = [Job(i, a[0], a[1], a[2]) for i, a in enumerate(jobs)]
+    sequence = Solution(2, input_jobs)
+    greedy = GreedyAlgorithm(10, (10, 6))
+    solution = greedy.process_input(sequence)
+    print(solution)
