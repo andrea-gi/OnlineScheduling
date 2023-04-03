@@ -9,8 +9,11 @@ class Solution:
         if jobs is not None:
             for j in jobs:
                 self.add_job(j)
+        self.up_to_date = False
+        self.sorted_jobs = list()
 
     def add_job(self, j: Job):
+        self.up_to_date = False
         self.max_time = max(self.max_time, j.arrival+j.duration)
         self.jobs[j.fare_class].add(j)
 
@@ -18,6 +21,8 @@ class Solution:
         return Solution(self.m, [set() for _ in range(self.m-i)] + self.jobs[-i:], self.max_time)
 
     def get_sorted_jobs(self, fare_class=None) -> list:
+        if self.up_to_date:
+            return self.sorted_jobs
         result = list()
         if fare_class is None:
             for fare_class in self.jobs:
@@ -26,4 +31,6 @@ class Solution:
             sorted_jobs = sorted(list(self.jobs[fare_class]))
             result.extend(sorted_jobs)
         result.sort()
-        return result
+        self.up_to_date = True
+        self.sorted_jobs = result
+        return list(result)
