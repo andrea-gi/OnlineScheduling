@@ -17,19 +17,17 @@ class OptimalSolver(Simulator):
         overlaps = [list() for _ in range(len(jobs))]
         for idx, job in enumerate(jobs):
             for other in jobs[idx+1:]:
-                if job.overlap(other):
+                if job.overlap(other) and job != other:
                     overlaps[job.index].append(other.index)
-                else:
-                    break
         return overlaps
 
     def process_input(self, input_sequence: Solution) -> Solution:
-        overlaps = self.find_overlaps(input_sequence)
+        overlaps = input_sequence.overlap_times(self.capacity)
         job_values = [self.fares[j.fare_class] * j.duration for j in input_sequence.get_sorted_jobs()]
 
         model = LpProblem("OnlineScheduling", LpMaximize)
 
-        J = [LpVariable("j_{i}".format(i=idx), lowBound=0, upBound=1, cat="Integer") for idx in range(len(overlaps))]
+        J = [LpVariable("j_{i}".format(i=idx), lowBound=0, upBound=1, cat="Integer") for idx in range(len(input_sequence))]
         overlaps_variables = [list() for _ in range(len(overlaps))]
         for idx, job in enumerate(overlaps):
             overlaps_variables[idx] = list(map(lambda x: J[x], job))  # Translate overlaps into LP variables
@@ -37,12 +35,14 @@ class OptimalSolver(Simulator):
         model += lpSum([J[i]*job_values[i] for i in range(len(job_values))])  # Objective function
 
         for idx, overlap in enumerate(overlaps_variables):
-            model += (1-J[idx]) + self.capacity - 1 >= lpSum(overlap)  # LP constraints
+            model += lpSum(overlap) <= self.capacity  # LP constraints
 
-        model.solve()
+        if overlaps:
+            model.solve()
 
         solution = Solution(input_sequence.m)
         for idx, var in enumerate(J):
-            if var.varValue == 1:
+            if var.value() == 1 or not overlaps:
                 solution.add_job(input_sequence.get_sorted_jobs()[idx])  # Add jobs found by LP to output solution
+        trueSol = solution.verify_solution(self.capacity)
         return solution
