@@ -1,6 +1,8 @@
 from OnlineScheduling.simulator import Simulator
 from OnlineScheduling.solution import Solution
 from heapq import heappush, heappop
+import logging
+from iteround import saferound
 
 
 class GreedyAlgorithm(Simulator):
@@ -9,6 +11,7 @@ class GreedyAlgorithm(Simulator):
         self.npl = npl
 
     def process_input(self, input_sequence: Solution) -> Solution:
+        logging.info("Starting Greedy Algorithm.")
         input_jobs = input_sequence.get_sorted_jobs()
         solution = Solution(input_sequence.m)
 
@@ -25,6 +28,7 @@ class GreedyAlgorithm(Simulator):
             current_load = sum(jobs_running_per_class)
             satisfies_npl = True
             for idx, partial in enumerate(jobs_running_per_class[:job.fare_class+1]):
+                # Only need to check classes up to job's class
                 if current_load >= self.npl[idx]:
                     satisfies_npl = False
                     break
@@ -35,6 +39,12 @@ class GreedyAlgorithm(Simulator):
                 heappush(running, (job.arrival + job.duration, job))
                 jobs_running_per_class[job.fare_class] += 1
 
+        is_sol = solution.verify_solution(self.capacity)
+        if is_sol:
+            logging.info("Solution found by Greedy Algorithm is valid.")
+        else:
+            logging.error("Solution found by Greedy Algorithm does not satisfy the capacity constraint {}"
+                          .format(self.capacity))
         return solution
 
     @staticmethod
@@ -44,3 +54,21 @@ class GreedyAlgorithm(Simulator):
         for i in range(1, len(npl_distinct)):
             npl_cumulative[i] = npl_cumulative[i-1] - npl_distinct[i-1]
         return npl_cumulative
+
+    @staticmethod
+    def npl_optimal(capacity, fares):
+        fares = list(fares)
+        if len(fares) == 1:
+            return [capacity]
+        m = len(fares)
+        fares.append(0)
+        npl = [0 for _ in range(m)]
+        delta = m
+        for i in range(1, m):
+            delta -= fares[i]/fares[i-1]
+        for i in range(m):
+            npl[i] = capacity/delta * (1 - fares[i+1]/fares[i])
+        npl = saferound(npl, 0, topline=capacity)
+        for i in range(m):
+            npl[i] = int(npl[i])
+        return GreedyAlgorithm.npl_converter(npl)

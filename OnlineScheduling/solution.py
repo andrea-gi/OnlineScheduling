@@ -1,5 +1,6 @@
 from OnlineScheduling.job import Job
 from heapq import heappush, heappop
+import logging
 
 
 class Solution:
@@ -57,43 +58,28 @@ class Solution:
 
     def overlap_times(self, capacity):
         current_time = 0
+        over_capacity = False
         overlapping_jobs = set()
         running_jobs_id = set()
         running = list()
-        over_capacity = False
-        job_per_start_time = dict()
-        for job in self.get_sorted_jobs():
-            if job.arrival not in job_per_start_time:
-                job_per_start_time[job.arrival] = list()
-            job_per_start_time[job.arrival].append(job)
-
-        # for time in job_per_start_time:
-        #     over_capacity = False
-        #     for job in job_per_start_time[time]:
-        #         while running and running[0][0] <= current_time:
-        #             to_remove = heappop(running)[1]  # Remove jobs that have finished from the running list
-        #             running_jobs_id.remove(to_remove.index)
-        #         heappush(running, (job.arrival + job.duration, job))
-        #         running_jobs_id.add(job.index)
-        #         over_capacity = len(running) > capacity
-        #         if over_capacity:
-        #             running_jobs_id_list = list(running_jobs_id)
-        #             running_jobs_id_list.sort()
-        #             overlapping_jobs.add(tuple(running_jobs_id_list))
 
         for job in self.get_sorted_jobs():
             current_time = max(current_time, job.arrival)  # Update the time only when it advances
+            if over_capacity and running and running[0][0] <= current_time:  # Add jobs to constraint only at peak (before removing)
+                running_jobs_id_list = list(running_jobs_id)
+                running_jobs_id_list.sort()
+                overlapping_jobs.add(tuple(running_jobs_id_list))
             while running and running[0][0] <= current_time:
                 to_remove = heappop(running)[1]  # Remove jobs that have finished from the running list
                 running_jobs_id.remove(to_remove.index)
             heappush(running, (job.arrival + job.duration, job))
             running_jobs_id.add(job.index)
             over_capacity = len(running) > capacity
-            if over_capacity:
-                running_jobs_id_list = list(running_jobs_id)
-                running_jobs_id_list.sort()
-                overlapping_jobs.add(tuple(running_jobs_id_list))
-        print("Built constraints.")
+        if over_capacity:  # Check if last timestep is a peak
+            running_jobs_id_list = list(running_jobs_id)
+            running_jobs_id_list.sort()
+            overlapping_jobs.add(tuple(running_jobs_id_list))
+        logging.info("Built constraints for Opt. {} constraints found".format(len(overlapping_jobs)))
         return overlapping_jobs
 
     def __len__(self):
