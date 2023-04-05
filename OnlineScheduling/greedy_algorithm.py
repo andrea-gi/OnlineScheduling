@@ -11,7 +11,7 @@ class GreedyAlgorithm(Simulator):
         self.npl = npl
 
     def process_input(self, input_sequence: Solution) -> Solution:
-        logging.info("Starting Greedy Algorithm.")
+        logging.debug("Starting {}".format(self))
         input_jobs = input_sequence.get_sorted_jobs()
         solution = Solution(input_sequence.m)
 
@@ -41,10 +41,10 @@ class GreedyAlgorithm(Simulator):
 
         is_sol = solution.verify_solution(self.capacity)
         if is_sol:
-            logging.info("Solution found by Greedy Algorithm is valid.")
+            logging.debug("Solution found by {} is valid.".format(self))
         else:
-            logging.error("Solution found by Greedy Algorithm does not satisfy the capacity constraint {}"
-                          .format(self.capacity))
+            logging.error("Solution found by {} does not satisfy the capacity constraint {}"
+                          .format(self, self.capacity))
         return solution
 
     @staticmethod
@@ -71,4 +71,8 @@ class GreedyAlgorithm(Simulator):
         npl = saferound(npl, 0, topline=capacity)
         for i in range(m):
             npl[i] = int(npl[i])
+        assert(sum(npl) == capacity)
         return GreedyAlgorithm.npl_converter(npl)
+
+    def __str__(self):
+        return "GreedyAlgorithm"

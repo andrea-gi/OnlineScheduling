@@ -24,7 +24,7 @@ class OptimalSolver(Simulator):
         return overlaps
 
     def process_input(self, input_sequence: Solution) -> Solution:
-        logging.info("Started Optimal Solver.")
+        logging.debug("Starting {}".format(self))
         overlaps = input_sequence.overlap_times(self.capacity)
         job_values = [self.fares[j.fare_class] * j.duration for j in input_sequence.get_sorted_jobs()]
 
@@ -37,7 +37,7 @@ class OptimalSolver(Simulator):
 
         model += lpSum([J[i]*job_values[i] for i in range(len(job_values))])  # Objective function
 
-        logging.info("Adding constraints to the model.")
+        logging.debug("Adding constraints to the model.")
         for idx, overlap in enumerate(overlaps_variables):
             model += lpSum(overlap) <= self.capacity  # LP constraints
 
@@ -51,8 +51,11 @@ class OptimalSolver(Simulator):
 
         is_sol = solution.verify_solution(self.capacity)
         if is_sol:
-            logging.info("Solution found by Optimal Solver is valid.")
+            logging.debug("Solution found by {} is valid.".format(self))
         else:
-            logging.error("Solution found by Optimal Solver does not satisfy the capacity constraint {}"
-                          .format(self.capacity))
+            logging.error("Solution found by {} does not satisfy the capacity constraint {}"
+                          .format(self, self.capacity))
         return solution
+
+    def __str__(self):
+        return "OptimalSolver"

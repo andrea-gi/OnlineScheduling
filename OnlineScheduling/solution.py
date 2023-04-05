@@ -79,7 +79,7 @@ class Solution:
             running_jobs_id_list = list(running_jobs_id)
             running_jobs_id_list.sort()
             overlapping_jobs.add(tuple(running_jobs_id_list))
-        logging.info("Built constraints for Opt. {} constraints found".format(len(overlapping_jobs)))
+        logging.info("Computed overlaps when n_jobs > capacity. {} constraints found".format(len(overlapping_jobs)))
         return overlapping_jobs
 
     def __len__(self):

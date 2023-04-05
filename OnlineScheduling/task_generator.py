@@ -1,5 +1,3 @@
-from numpy import random
-
 from OnlineScheduling.job import Job
 from OnlineScheduling.solution import Solution
 
@@ -14,21 +12,24 @@ class TaskGenerator:
         self.set_length_dist(length[0], length[1:])
         self.set_fare_class_dist(fare_class[0], fare_class[1:])
 
-    def generate_jobs(self, number_of_jobs: int) -> Solution:
-        solution = Solution(self.number_of_classes)
+    def generate_jobs(self, number_of_sequences: int, number_of_jobs: int) -> list[Solution]:
+        sequences = list()
+        for _ in range(number_of_sequences):
+            solution = Solution(self.number_of_classes)
+            jobs = list()
+            arrival = self.arrival_fun(*self.arrival_params, size=number_of_jobs)
+            length = self.length_fun(*self.length_params, size=number_of_jobs)
+            fare_class = self.fare_class_fun(*self.fare_class_params, size=number_of_jobs)
 
-        jobs = list()
-        arrival = self.arrival_fun(*self.arrival_params, size=number_of_jobs)
-        length = self.length_fun(*self.length_params, size=number_of_jobs)
-        fare_class = self.fare_class_fun(*self.fare_class_params, size=number_of_jobs)
+            for idx in range(number_of_jobs):
+                jobs.append((round(arrival[idx]), round(length[idx]), round(fare_class[idx])))
 
-        for idx in range(number_of_jobs):
-            jobs.append((round(arrival[idx]), round(length[idx]), round(fare_class[idx])))
+            jobs.sort(key=lambda x: x[0])
+            for idx, job in enumerate(jobs):
+                solution.add_job(Job(idx, *job))
+            sequences.append(solution)
 
-        jobs.sort(key=lambda x: x[0])
-        for idx, job in enumerate(jobs):
-            solution.add_job(Job(idx, *job))
-        return solution
+        return sequences
 
     def set_arrival_dist(self, arrival, params):
         self.arrival_fun = arrival
