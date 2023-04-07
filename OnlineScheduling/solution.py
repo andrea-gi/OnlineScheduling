@@ -25,7 +25,7 @@ class Solution:
     def get_lowest_class_solution(self, i):
         return Solution(self.m, [set() for _ in range(self.m-i)] + self.jobs[-i:], self.max_time)
 
-    def get_sorted_jobs(self, fare_class=None) -> list:
+    def get_sorted_jobs(self, fare_class=None) -> list[Job]:
         if self.up_to_date and fare_class is None:
             return self.sorted_jobs  # cache of all sorted jobs
         result = list()
@@ -56,16 +56,17 @@ class Solution:
                 return False
         return True
 
-    def overlap_times(self, capacity):
+    def overlap_times(self, capacity: int) -> set[tuple[int]]:
+        """ Returns tuples of overlaps, with the indices of overlapping jobs at a certain timestep. """
         current_time = 0
-        over_capacity = False
         overlapping_jobs = set()
         running_jobs_id = set()
         running = list()
 
         for job in self.get_sorted_jobs():
             current_time = max(current_time, job.arrival)  # Update the time only when it advances
-            if over_capacity and running and running[0][0] <= current_time:  # Add jobs to constraint only at peak (before removing)
+            if len(running) > capacity and running and running[0][0] <= current_time:
+                # Add jobs to constraint only at peak (before removing)
                 running_jobs_id_list = list(running_jobs_id)
                 running_jobs_id_list.sort()
                 overlapping_jobs.add(tuple(running_jobs_id_list))
@@ -74,8 +75,7 @@ class Solution:
                 running_jobs_id.remove(to_remove.index)
             heappush(running, (job.arrival + job.duration, job))
             running_jobs_id.add(job.index)
-            over_capacity = len(running) > capacity
-        if over_capacity:  # Check if last timestep is a peak
+        if len(running) > capacity:  # Check if last timestep is a peak
             running_jobs_id_list = list(running_jobs_id)
             running_jobs_id_list.sort()
             overlapping_jobs.add(tuple(running_jobs_id_list))

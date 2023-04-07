@@ -74,5 +74,13 @@ class GreedyAlgorithm(Simulator):
         assert(sum(npl) == capacity)
         return GreedyAlgorithm.npl_converter(npl)
 
+    @staticmethod
+    def cr_lower_bound(fares, min_length, max_length):
+        delta = len(fares)
+        for i in range(1, len(fares)):
+            delta -= fares[i] / fares[i - 1]
+        length_ratio = min(min_length/max_length, (min_length+1)/(min_length+max_length))
+        return length_ratio/delta
+
     def __str__(self):
         return "GreedyAlgorithm"
