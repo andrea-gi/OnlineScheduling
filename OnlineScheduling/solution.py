@@ -44,7 +44,7 @@ class Solution:
     def get_value(self, fares) -> float:
         return sum([fares[j.fare_class] * j.duration for j in self.get_sorted_jobs()])
 
-    def verify_solution(self, capacity):
+    def verify_solution(self, capacity: int) -> bool:
         current_time = 0
         running = list()
         for job in self.get_sorted_jobs():
@@ -81,6 +81,29 @@ class Solution:
             overlapping_jobs.add(tuple(running_jobs_id_list))
         logging.info("Computed overlaps when n_jobs > capacity. {} constraints found".format(len(overlapping_jobs)))
         return overlapping_jobs
+
+    def load_per_time(self) -> dict[int, int]:
+        """ Returns number of jobs overlapping per unit of time. """
+        current_time = 0
+        overlapping_count = dict()
+        jobs = list()
+        running = set()
+
+        for job in self.get_sorted_jobs():
+            heappush(jobs, (job.arrival, True, job))
+
+        while jobs:
+            current_time = max(current_time, jobs[0][0])
+            if not jobs[0][1]:  # jobs[0][1] is True if job is starting and False if finishing
+                job = heappop(jobs)[2]
+                running.remove(job)
+            else:
+                job = heappop(jobs)[2]
+                running.add(job)
+                heappush(jobs, (job.arrival + job.duration, False, job))
+            overlapping_count[current_time] = len(running)
+        return overlapping_count
+
 
     def __len__(self):
         return self.number_of_jobs
