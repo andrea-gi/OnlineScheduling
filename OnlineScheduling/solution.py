@@ -1,5 +1,6 @@
 from OnlineScheduling.job import Job
 from heapq import heappush, heappop
+from numpy import random
 import logging
 
 
@@ -104,6 +105,19 @@ class Solution:
             overlapping_count[current_time] = len(running)
         return overlapping_count
 
+    @staticmethod
+    def merge_solutions(first, second):
+        numpy_generator = random.default_rng()
+        m = max(first.m, second.m)
+        result = Solution(m)
+        merged_sol = first.get_sorted_jobs()
+        merged_sol.extend(second.get_sorted_jobs())
+        jobs = [(j, numpy_generator.integers(0, 2)) for j in merged_sol]
+        jobs.sort(key=lambda x: (x[0].arrival, x[0].index, x[1]))  # break ties between solutions randomly
+
+        for idx, job in enumerate(jobs):
+            result.add_job(Job(idx, job[0].arrival, job[0].duration, job[0].fare_class))
+        return result
 
     def __len__(self):
         return self.number_of_jobs

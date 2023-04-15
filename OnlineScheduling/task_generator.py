@@ -31,6 +31,26 @@ class TaskGenerator:
 
         return sequences
 
+    def generate_jobs_for_class(self, number_of_sequences: int, number_of_jobs: tuple[int]) -> list[Solution]:
+        sequences = list()
+        for _ in range(number_of_sequences):
+            solution = Solution(self.number_of_classes)
+            jobs = list()
+            for cls in number_of_jobs:
+                arrival = self.arrival_fun(*self.arrival_params, size=cls)
+                length = self.length_fun(*self.length_params, size=cls)
+                fare_class = self.fare_class_fun(*self.fare_class_params, size=cls)
+
+                for idx in range(cls):
+                    jobs.append((round(arrival[idx]), round(length[idx]), round(fare_class[idx])))
+
+            jobs.sort(key=lambda x: x[0])
+            for idx, job in enumerate(jobs):
+                solution.add_job(Job(idx, *job))
+            sequences.append(solution)
+
+        return sequences
+
     def set_arrival_dist(self, arrival, params):
         self.arrival_fun = arrival
         self.arrival_params = params
