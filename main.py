@@ -8,9 +8,22 @@ from OnlineScheduling.solution import Solution
 from OnlineScheduling.task_generator import TaskGenerator
 from numpy import random
 import logging
-from OnlineScheduling.plot import plot_competitive_ratio, plot_revenue, plot_lb_cr, plot_length_ratio_comparison, plot_jobs_per_time
+from OnlineScheduling.plot import plot_competitive_ratio, plot_revenue, plot_lb_cr, plot_length_ratio_comparison, \
+    plot_jobs_per_time
 from datetime import datetime
 import pickle
+
+
+def find_fares_scenarios(min_f, max_f, parts):
+    if parts == 2:
+        t = [max_f, min_f]
+        return tuple(t), tuple(t), tuple(t)
+    mid = (min_f + max_f) / 2
+    parts -= 2
+    high_skewed = tuple(reversed([min_f] + [mid + x * (max_f - mid) / parts for x in range(parts + 1)]))
+    uniform = tuple(reversed([min_f + x * (max_f - min_f) / (parts + 1) for x in range(parts + 2)]))
+    low_skewed = tuple(reversed([min_f + x * (mid - min_f) / parts for x in range(parts + 1)] + [max_f]))
+    return high_skewed, uniform, low_skewed
 
 
 def compare_algorithms(input_sequences: list[Solution],
@@ -42,32 +55,30 @@ def worst_case(job_number: tuple, fares: tuple, capacity: int, min_l: int, max_l
     for job_n in job_number:
         input_sequences = [Solution(m) for _ in range(sequences_number)]
         for i in range(3 * m):
-            # sequences = [Solution(m) for _ in range(sequences_number)]
             if i < m:
                 my_gen = TaskGenerator(len(fares), arrival=(numpy_generator.integers,
                                                             3000 * i, 3000 * (i + 1)),
                                        length=(numpy_generator.integers, min_l + 5000, min_l + 20000),
-                                       fare_class=(numpy_generator.integers, m-i-1, m - i))
+                                       fare_class=(numpy_generator.integers, m - i - 1, m - i))
                 sequences = my_gen.generate_jobs(sequences_number, job_n)
-            elif i < 2*m:
+            elif i < 2 * m:
                 my_gen = TaskGenerator(len(fares), arrival=(numpy_generator.integers,
                                                             3000 * i, 3000 * (i + 1)),
                                        length=(numpy_generator.integers, min_l + 50, min_l + 200),
-                                       fare_class=(numpy_generator.integers, 2*m - i - 1, 2*m - i))
+                                       fare_class=(numpy_generator.integers, 2 * m - i - 1, 2 * m - i))
                 sequences = my_gen.generate_jobs(sequences_number, job_n)
             else:
                 my_gen = TaskGenerator(len(fares), arrival=(numpy_generator.integers,
-                                                            min_l + 500 * (i-m), min_l + 500 * (i - m + 1)),
-                                       length=(numpy_generator.integers, max_l-10000, max_l + 1),
-                                       fare_class=(numpy_generator.integers, 3*m - i - 1, 3*m - i))
+                                                            min_l + 700 * (i - m), min_l + 700 * (i - m + 1)),
+                                       length=(numpy_generator.integers, max_l - 10000, max_l + 1),
+                                       fare_class=(numpy_generator.integers, 3 * m - i - 1, 3 * m - i))
                 sequences = my_gen.generate_jobs(sequences_number, job_n)
             for j in range(sequences_number):
                 input_sequences[j] = Solution.merge_solutions(input_sequences[j], sequences[j])
-                # if j == sequences_number-1 and i==(3*m)-1 and flag:
+                # if j == sequences_number - 1 and i == (3 * m) - 1:
                 #     plot_jobs_per_time(input_sequences[j], capacity, time)
-                #     flag = False
         values.append(compare_algorithms(input_sequences, fares, greedy, opt))
-        print_input[str(job_n * m)] = values[-1][0]
+        print_input[str(job_n * m * 3)] = values[-1][0]
 
     file = open("solution_data_difficult_input" + time + ".simdata", "wb")
     pickle.dump(values, file)
@@ -76,7 +87,7 @@ def worst_case(job_number: tuple, fares: tuple, capacity: int, min_l: int, max_l
                            GreedyAlgorithm.cr_lower_bound(fares, min_l, max_l),
                            time,
                            title,
-                           x_label="Number of jobs per burst")
+                           x_label="Number of jobs")
 
 
 def competitive_ratio_job_number(job_number: tuple,
@@ -95,7 +106,7 @@ def competitive_ratio_job_number(job_number: tuple,
     print_input = dict()
     for i in range(len(job_number)):
         my_gen = TaskGenerator(len(fares), arrival=(numpy_generator.integers, 0, arrival),
-                               length=(numpy_generator.integers, min_l, max_l),
+                               length=(numpy_generator.integers, min_l, max_l + 1),
                                fare_class=(numpy_generator.integers, 0, len(fares)))
         random_jobs_sequences = my_gen.generate_jobs(sequences_number, job_number[i])
         values.append(compare_algorithms(random_jobs_sequences, fares, greedy, opt))
@@ -136,7 +147,7 @@ def competitive_ratio_fare_distribution(job_number: tuple,
     print_input = dict()
     for i in range(len(job_number)):
         my_gen = TaskGenerator(len(fares), arrival=(numpy_generator.integers, 0, arrival),
-                               length=(numpy_generator.integers, min_l, max_l),
+                               length=(numpy_generator.integers, min_l, max_l + 1),
                                fare_class=(choice_wrapper,))
         random_jobs_sequences = my_gen.generate_jobs(sequences_number, job_number[i])
         values.append(compare_algorithms(random_jobs_sequences, fares, greedy, opt))
@@ -182,7 +193,7 @@ def revenue_fares(job_number: int,
     for i in range(len(fares)):
         values.append(list())
         my_gen = TaskGenerator(len(fares[i]), arrival=(numpy_generator.integers, 0, arrival),
-                               length=(numpy_generator.integers, min_l, max_l),
+                               length=(numpy_generator.integers, min_l, max_l + 1),
                                fare_class=(choice_wrapper, i))
         random_jobs_sequences = my_gen.generate_jobs(sequences_number, job_number)
         for input_seq in random_jobs_sequences:
@@ -229,7 +240,7 @@ def cr_fares(job_number: int,
     for i, fare in enumerate(fares):
         values.append(list())
         my_gen = TaskGenerator(len(fare), arrival=(numpy_generator.integers, 0, arrival),
-                               length=(numpy_generator.integers, min_l, max_l),
+                               length=(numpy_generator.integers, min_l, max_l + 1),
                                fare_class=(choice_wrapper, i))
         random_jobs_sequences = my_gen.generate_jobs(sequences_number, job_number)
         for input_seq in random_jobs_sequences:
@@ -267,15 +278,15 @@ if __name__ == '__main__':
     ex_min_l = 262800
     ex_max_l = 525600
     ex_arrival = 4 * 525600
+    find_fares_scenarios(40, 200, 5)
     # plot_length_ratio_comparison()
-    # plot_lb_cr(40, 2000, ex_min_l, ex_max_l, 30)
+    plot_lb_cr(40, 400, ex_min_l, ex_max_l, 30)
     job_numbers = (300, 600, 900, 1200, 1500, 1800, 2100)
-    (30,)
-    worst_case((3, 4, 5, 6, 10, 20, 30, 50, 150, 250, 500), ex_fares, 50, ex_min_l, ex_max_l, ex_arrival, 5, date_time)
-    # competitive_ratio_fare_distribution(job_number, sequences_number=1, time=date_time)
-    # competitive_ratio_job_number(job_number, fares=(10, 7.5, 5), sequences_number=10, time=date_time)
-    # competitive_ratio_job_number(job_number, fares=(10, 5), sequences_number=10, time=date_time)
-    # competitive_ratio_job_number(job_number, fares=(10,), sequences_number=10, time=date_time)
+    # worst_case((3, 4, 5, 6, 15, 20, 30, 50, 150, 250, 500), ex_fares, 50, ex_min_l, ex_max_l, ex_arrival, 25, date_time)
+    # competitive_ratio_fare_distribution(job_numbers, time=date_time)
+    # competitive_ratio_job_number(job_numbers, fares=(10, 7.5, 5), sequences_number=2, time=date_time)
+    # competitive_ratio_job_number(job_numbers, fares=(10, 5), sequences_number=2, time=date_time)
+    # competitive_ratio_job_number(job_numbers, fares=(10,), capacity=50, min_l=ex_min_l, max_l=ex_min_l*2, arrival=(ex_min_l*3), sequences_number=20, time=date_time)
     #
     # revenue_fares(1000, ((200, 40),
     #                      (200, 120, 40),
@@ -283,12 +294,21 @@ if __name__ == '__main__':
     #                      (200, 180, 160, 140, 120, 100, 80, 60, 40)
     #                      ), sequences_number=10, time=date_time, x_label_ticks=(2, 3, 5, 9))
 
-    # cr_fares(2000, ((200, 40),
-    #                 (200, 190, 40),
-    #                 (200, 190, 180, 170, 40),
-    #                 (200, 190, 180, 170, 160, 150, 140, 130, 40)
-    #                 ), capacity=100, sequences_number=25, title="Value ratio with different fares", time=date_time,
-    #          x_label_ticks=(2, 3, 5, 9))
+    fares_input = {"skewed low": list(), "uniform": list(), "skewed high": list()}
+
+    for i in (2, 3, 5, 9):
+        scenario_high, scenario_uniform, scenario_low = find_fares_scenarios(40, 400, i)
+        fares_input["skewed high"].append(scenario_high)
+        fares_input["uniform"].append(scenario_uniform)
+        fares_input["skewed low"].append(scenario_low)
+    fares_input["skewed high"] = tuple(fares_input["skewed high"])
+    fares_input["uniform"] = tuple(fares_input["uniform"])
+    fares_input["skewed low"] = tuple(fares_input["skewed low"])
+
+    for input_type in fares_input:
+        cr_fares(600, fares_input[input_type], capacity=50,
+                 sequences_number=50, title="Value ratio with different fares, {}".format(input_type), time=date_time,
+                 x_label_ticks=(2, 3, 5, 9))
 
     # cr_fares(1000, ((200, 40),
     #                 (200, 120, 40),

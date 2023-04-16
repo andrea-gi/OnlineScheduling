@@ -50,7 +50,8 @@ def plot_competitive_ratio(values_per_scenario: dict[str, list[tuple]], lower_bo
         ax.set_xticklabels(list(mean_ratio.keys()))
     ax.set_title(title)
     if lower_bound:
-        ax.axhline(y=lower_bound, color='red')
+        ax.axhline(y=lower_bound, color='red', label="Theoretical lower bound")
+        ax.legend()
     if not x_label_ticks and max([len(x) for x in mean_ratio.keys()]) > 10:
         plt.setp(ax.get_xticklabels(), rotation=15, horizontalalignment='right')
     ax.yaxis.grid(True)
@@ -72,7 +73,9 @@ def plot_jobs_per_time(solution: Solution, capacity: int, time_step):
     ax.axhline(y=capacity, label="Capacity $n$", color='red')
     ax.set_title('Number of jobs per time step')
     ax.legend()
-    plt.xlim(xmax=3.5 * 262800)
+
+    plt.ylim(ymax=480)
+    plt.xlim(xmin=-0.05 * 262800, xmax=3.5 * 262800)
 
     plt.tight_layout()
     fig.savefig("n_jobs_time_step_{}.pdf".format(time_step))
